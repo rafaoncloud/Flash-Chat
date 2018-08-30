@@ -14,13 +14,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
     
-    
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         
-        //TODO: Initialise and Configure your Firebase here:
+        // Initialise and Configure Firebase
         FirebaseApp.configure()
-        let db = Database.database().reference()
-        db.setValue("Got Data!")
+        
+        // let db = Database.database().reference()
+        // db.setValue("Got Data!")
         
         return true
     }

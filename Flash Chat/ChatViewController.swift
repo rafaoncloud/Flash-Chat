@@ -9,10 +9,12 @@
 import UIKit
 import Firebase
 
+import ChameleonFramework
+
 class ChatViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, UITextFieldDelegate {
     
     // Declare instance variables here
-
+    var messages : [Message] = [Message]()
     
     // We've pre-linked the IBOutlets
     @IBOutlet var heightConstraint: NSLayoutConstraint!
@@ -39,12 +41,15 @@ class ChatViewController: UIViewController, UITableViewDelegate, UITableViewData
 
         // Register MessageCell.xib file
         messageTableView.register(UINib(nibName: "MessageCell", bundle: nil), forCellReuseIdentifier: "customMessageCell")
-        configureTableView()
         
         // Hide Back Button
         navigationItem.hidesBackButton = true
+        
+        configureTableView()
+        retreiveMessages()
+        messageTableView.separatorStyle = .none
     }
-
+    
     ///////////////////////////////////////////
     
     //MARK: - TableView DataSource Methods
@@ -53,15 +58,21 @@ class ChatViewController: UIViewController, UITableViewDelegate, UITableViewData
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "customMessageCell", for: indexPath) as! CustomMessageCell
         
-        let messageArray = ["First Message", "Second Message gianttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt", "Third Message"]
+        cell.messageBody.text = messages[indexPath.row].bodyMessage
+        cell.senderUsername.text = messages[indexPath.row].sender
+        cell.avatarImageView.image = UIImage(named: "egg")
         
-        cell.messageBody.text = messageArray[indexPath.row]
+        if cell.senderUsername.text == Auth.auth().currentUser?.email as String? {
+            
+            //cell.avatarImageView.backgroundColor = UIColor.flatSkyBlueColorDark()
+            cell.messageBackground.backgroundColor = #colorLiteral(red: 0, green: 0.5008062124, blue: 1, alpha: 0.7996575342)
+        }
         
         return cell
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 3
+        return messages.count
     }
     
     @objc func tableViewTapped(){
@@ -138,11 +149,29 @@ class ChatViewController: UIViewController, UITableViewDelegate, UITableViewData
         }
     }
     
-    //TODO: Create the retrieveMessages method here:
-    
-    
-
-    
+    //TODO: Create the retrieveMessages method:
+    func retreiveMessages() {
+        
+        let messageDb = Database.database().reference().child("Messages")
+        
+        messageDb.observe(.childAdded) { (dataSnapshot) in
+            
+            let snapshotValue = dataSnapshot.value as! Dictionary<String,String>
+            
+            let text = snapshotValue["MessageBody"]!
+            let sender = snapshotValue["Sender"]!
+            
+            // Build the message
+            let message = Message(bodyMessage: text, sender: sender)
+            
+            // Update the messages array in UI
+            self.messages.append(message)
+            
+            // Update Table
+            self.configureTableView()
+            self.messageTableView.reloadData()
+        }
+    }
     
     
     @IBAction func logOutPressed(_ sender: AnyObject) {
@@ -156,7 +185,6 @@ class ChatViewController: UIViewController, UITableViewDelegate, UITableViewData
         } catch {
             print("Issue Signing out")
         }
-        
         
     }
     
